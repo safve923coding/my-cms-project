@@ -35,31 +35,26 @@ export function useCases() {
     useEffect(() => {
         (async () => {
             try {
-                // First try to load from Firebase
+                let firebaseData = [];
                 try {
                     const casesRef = collection(db, 'cases');
-                    // Get all cases, we might want to paginate or limit this in the future if it gets too large
-                    const q = query(casesRef, orderBy('createdAt', 'desc'));
+                    const q = query(casesRef, orderBy('timestamp', 'desc')); // Order by timestamp for UI
                     const querySnapshot = await getDocs(q);
 
                     if (!querySnapshot.empty) {
-                        const firebaseCases = [];
                         querySnapshot.forEach((doc) => {
-                            firebaseCases.push({ id: doc.id, ...doc.data() });
+                            firebaseData.push({ id: doc.id, ...doc.data() });
                         });
-
-                        setAllCases(firebaseCases);
-                        setLoading(false);
-                        return; // Found data in Firebase, no need to check local JSON
                     }
                 } catch (fbError) {
                     console.error("Error fetching from Firebase:", fbError);
-                    // Fall back to local JSON if Firebase fails or is empty
                 }
 
                 const resp = await fetch('/cases.json');
                 if (!resp.ok) throw new Error('HTTP ' + resp.status);
-                let data = await resp.json();
+                let localJsonData = await resp.json();
+
+                let data = [...firebaseData, ...localJsonData];
 
                 // Append local storage updates
                 try {
