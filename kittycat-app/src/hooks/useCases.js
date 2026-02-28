@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import { db } from '../firebase';
+import { collection, doc, setDoc, writeBatch, getDocs, orderBy, query } from 'firebase/firestore';
 
 function getTimeRange(filter) {
     const now = new Date();
@@ -33,6 +35,28 @@ export function useCases() {
     useEffect(() => {
         (async () => {
             try {
+                // First try to load from Firebase
+                try {
+                    const casesRef = collection(db, 'cases');
+                    // Get all cases, we might want to paginate or limit this in the future if it gets too large
+                    const q = query(casesRef, orderBy('createdAt', 'desc'));
+                    const querySnapshot = await getDocs(q);
+
+                    if (!querySnapshot.empty) {
+                        const firebaseCases = [];
+                        querySnapshot.forEach((doc) => {
+                            firebaseCases.push({ id: doc.id, ...doc.data() });
+                        });
+
+                        setAllCases(firebaseCases);
+                        setLoading(false);
+                        return; // Found data in Firebase, no need to check local JSON
+                    }
+                } catch (fbError) {
+                    console.error("Error fetching from Firebase:", fbError);
+                    // Fall back to local JSON if Firebase fails or is empty
+                }
+
                 const resp = await fetch('/cases.json');
                 if (!resp.ok) throw new Error('HTTP ' + resp.status);
                 let data = await resp.json();
@@ -60,7 +84,7 @@ export function useCases() {
                 data.sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
                 setAllCases(data);
             } catch (e) {
-                setError('ไม่สามารถโหลด cases.json: ' + e.message);
+                setError('ไม่สามารถโหลดข้อมูล: ' + e.message);
             } finally {
                 setLoading(false);
             }
@@ -163,10 +187,30 @@ export function useCases() {
         return count;
     };
 
-    const importCases = (newCases) => {
+    const importCases = async (newCases) => {
         if (!newCases || newCases.length === 0) return 0;
 
         newCases.forEach((c, i) => { if (!c.id) c.id = c.messageId || ('import_' + Date.now() + '_' + i); });
+
+        try {
+            // Save to Firestore using a batch to avoid too many writes
+            const batch = writeBatch(db);
+            const casesRef = collection(db, 'cases');
+
+            newCases.forEach(c => {
+                const docRef = doc(casesRef, c.id);
+                batch.set(docRef, {
+                    ...c,
+                    createdAt: new Date().toISOString()
+                }, { merge: true }); // Use merge to not overwrite existing data unexpectedly
+            });
+
+            await batch.commit();
+            console.log(`Successfully saved ${newCases.length} cases to Firestore`);
+        } catch (error) {
+            console.error("Error saving to Firestore:", error);
+            // We might want to alert the user here, but for now we fall back to local state
+        }
 
         setAllCases(prev => {
             const merged = [...prev, ...newCases];
@@ -176,7 +220,7 @@ export function useCases() {
 
             uniqueMerged.sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
 
-            // Save to localStorage
+            // Save to localStorage as a backup/fast cache
             try {
                 const existingLocalStr = localStorage.getItem(LOCAL_STORAGE_KEY);
                 const existingLocal = existingLocalStr ? JSON.parse(existingLocalStr) : [];
