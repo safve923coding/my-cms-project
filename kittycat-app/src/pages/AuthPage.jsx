@@ -15,9 +15,9 @@ export default function AuthPage() {
     const navigate = useNavigate();
     const particlesRef = useRef(null);
 
-    // Redirect if already logged in
+    // Redirect if already logged in WITH ROLE
     useEffect(() => {
-        if (!loading && user) {
+        if (!loading && user && user.role) {
             if (isAdmin) {
                 navigate('/admin');
             } else {
@@ -110,13 +110,20 @@ export default function AuthPage() {
         try {
             const cred = await signInWithPopup(auth, googleProvider);
 
+            const isSuper = cred.user.email && cred.user.email.toLowerCase() === 'chatpisit.safe.sh@gmail.com';
             // Just in case it's a new user, update or set their db record
-            await setDoc(doc(db, "users", cred.user.uid), {
+            const dataToSet = {
                 uid: cred.user.uid,
                 email: cred.user.email,
                 displayName: cred.user.displayName,
                 lastLogin: new Date().toISOString()
-            }, { merge: true });
+            };
+
+            if (isSuper) {
+                dataToSet.role = 'superadmin';
+            }
+
+            await setDoc(doc(db, "users", cred.user.uid), dataToSet, { merge: true });
 
         } catch (e) {
             setLoadingAuth(false);

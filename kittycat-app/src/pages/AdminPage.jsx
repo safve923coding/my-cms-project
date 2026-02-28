@@ -66,14 +66,21 @@ export default function AdminPage() {
 
     if (loading) {
         return (
-            <div className="container">
+            <div className="container" style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <div className="loading"><div className="spinner"></div><div className="loading-text">กำลังตรวจสอบสิทธิ์...</div></div>
             </div>
         );
     }
 
     if (!user || !isAdmin) {
-        return null; // Will be redirected by useEffect
+        return (
+            <div className="container" style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
+                    <h2>ไม่มีสิทธิ์เข้าถึง</h2>
+                    <p>กำลังพากลับไปยังหน้าหลัก...</p>
+                </div>
+            </div>
+        );
     }
 
     return (

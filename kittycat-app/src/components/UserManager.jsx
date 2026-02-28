@@ -50,7 +50,7 @@ export default function UserManager() {
     }, []);
 
     const handleDeleteUser = async (userId, userEmail) => {
-        if (userEmail.toLowerCase() === 'chatpisit.safe.sh@gmail.com') {
+        if (userEmail && userEmail.toLowerCase() === 'chatpisit.safe.sh@gmail.com') {
             openModal('ไม่อนุญาต', 'ไม่สามารถลบบัญชีผู้ดูแลหลักได้ (Superadmin Protected)', 'info');
             return;
         }
@@ -77,7 +77,7 @@ export default function UserManager() {
     };
 
     const handleRoleChange = async (userId, userEmail, newRole) => {
-        if (userEmail.toLowerCase() === 'chatpisit.safe.sh@gmail.com') {
+        if (userEmail && userEmail.toLowerCase() === 'chatpisit.safe.sh@gmail.com') {
             fetchUsers();
             openModal('ไม่อนุญาต', 'ไม่สามารถเปลี่ยนยศผู้ดูแลหลักได้ (Superadmin Protected)', 'info');
             return;
@@ -142,7 +142,7 @@ export default function UserManager() {
                             <tr><td colSpan="5" className="text-center" style={{ padding: '2rem', color: 'var(--text-secondary)' }}>ไม่พบข้อมูลผู้ใช้งาน</td></tr>
                         ) : (
                             users.map(u => {
-                                const isSuperAdmin = u.email.toLowerCase() === 'chatpisit.safe.sh@gmail.com';
+                                const isSuperAdmin = u.email && u.email.toLowerCase() === 'chatpisit.safe.sh@gmail.com';
                                 const isSelf = currentUser && currentUser.uid === u.id;
                                 const isProtected = isSuperAdmin || isSelf;
 
