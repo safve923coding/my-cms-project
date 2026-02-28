@@ -78,6 +78,7 @@ export function useDiscordScraper() {
                     currentAfter = maxId;
 
                     setProgress(`เจอข้อมูล ${allNewMessages.length} คดี...`);
+                    await delay(200);
 
                 } else if (response.status === 429) {
                     const data = await response.json();

@@ -188,23 +188,27 @@ export function useCases() {
         newCases.forEach((c, i) => { if (!c.id) c.id = c.messageId || ('import_' + Date.now() + '_' + i); });
 
         try {
-            // Save to Firestore using a batch to avoid too many writes
-            const batch = writeBatch(db);
+            // Firestore writeBatch has a limit of 500 writes
+            const BATCH_LIMIT = 500;
             const casesRef = collection(db, 'cases');
 
-            newCases.forEach(c => {
-                const docRef = doc(casesRef, c.id);
-                batch.set(docRef, {
-                    ...c,
-                    createdAt: new Date().toISOString()
-                }, { merge: true }); // Use merge to not overwrite existing data unexpectedly
-            });
+            for (let i = 0; i < newCases.length; i += BATCH_LIMIT) {
+                const chunk = newCases.slice(i, i + BATCH_LIMIT);
+                const batch = writeBatch(db);
 
-            await batch.commit();
-            console.log(`Successfully saved ${newCases.length} cases to Firestore`);
+                chunk.forEach(c => {
+                    const docRef = doc(casesRef, c.id);
+                    batch.set(docRef, {
+                        ...c,
+                        createdAt: new Date().toISOString()
+                    }, { merge: true });
+                });
+
+                await batch.commit();
+            }
+            console.log(`Successfully saved ${newCases.length} cases to Firestore in chunks`);
         } catch (error) {
             console.error("Error saving to Firestore:", error);
-            // We might want to alert the user here, but for now we fall back to local state
         }
 
         setAllCases(prev => {
