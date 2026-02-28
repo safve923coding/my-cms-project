@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useCases } from '../hooks/useCases';
 import { useDiscordScraper } from '../hooks/useDiscordScraper';
-import { Shield, Trophy, RefreshCw, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Shield, Trophy, RefreshCw, TrendingUp, TrendingDown, Minus, Search } from 'lucide-react';
+import ConfirmModal from '../components/ConfirmModal';
 import './DashboardPage.css';
 
 const TIME_FILTERS = [
@@ -13,7 +14,7 @@ const TIME_FILTERS = [
     { key: 'lastmonth', label: 'เดือนที่แล้ว' },
 ];
 
-const COOLDOWN_MS = 30 * 60 * 1000; // 30 minutes
+const COOLDOWN_MS = 0; // No cooldown
 
 export default function DashboardPage() {
     const {
@@ -38,20 +39,38 @@ export default function DashboardPage() {
     }, []);
 
     const timeSinceLastUpdate = now - lastUpdate;
-    const canUpdate = timeSinceLastUpdate > COOLDOWN_MS;
+    const canUpdate = timeSinceLastUpdate >= COOLDOWN_MS;
     const minutesLeft = canUpdate ? 0 : Math.ceil((COOLDOWN_MS - timeSinceLastUpdate) / 60000);
+
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const [modal, setModal] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        type: 'info',
+        onConfirm: () => { }
+    });
+
+    const openModal = (title, message, type) => {
+        setModal({ isOpen: true, title, message, type, onConfirm: () => { } });
+    };
+
+    const closeModal = () => setModal(m => ({ ...m, isOpen: false }));
 
     const handlePublicUpdate = async () => {
         if (!canUpdate) {
-            alert(`กรุณารออีก ${minutesLeft} นาทีก่อนอัพเดทข้อมูลใหม่`);
+            openModal('กรุณารอสักครู่', `กรุณารออีก ${minutesLeft} นาทีก่อนอัพเดทข้อมูลใหม่`, 'info');
             return;
         }
         const newCases = await fetchNewCases(allCases);
         if (newCases && newCases.length > 0) {
             importCases(newCases);
-            alert(`อัปเดตข้อมูลสำเร็จ! เพิ่มข้อมูลใหม่จำนวน ${newCases.length} คดี`);
+            openModal('อัปเดตข้อมูลสำเร็จ', `เพิ่มข้อมูลใหม่จำนวน ${newCases.length} คดี`, 'success');
         } else if (newCases && newCases.length === 0) {
-            alert('ข้อมูลคดีเป็นปัจจุบันอยู่แล้ว');
+            openModal('ข้อมูลล่าสุดแล้ว', 'ข้อมูลคดีเป็นปัจจุบันอยู่แล้ว', 'success');
+        } else {
+            openModal('เกิดข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเพื่อดึงข้อมูลคดีได้ โปรดเช็คการตั้งค่า Discord', 'danger');
         }
         const currentTime = Date.now();
         setLastUpdate(currentTime);
@@ -68,7 +87,7 @@ export default function DashboardPage() {
     }
 
     // Dynamic sorting based on active time filter
-    const sortedStats = [...officerStats].sort((a, b) => {
+    let sortedStats = [...officerStats].sort((a, b) => {
         if (timeFilter === 'today') return b.today - a.today;
         if (timeFilter === 'yesterday') return b.yesterday - a.yesterday;
         if (timeFilter === 'week') return b.thisWeek - a.thisWeek;
@@ -76,6 +95,10 @@ export default function DashboardPage() {
         if (timeFilter === 'lastmonth') return b.lastMonth - a.lastMonth;
         return b.total - a.total; // Default 'all'
     });
+
+    if (searchTerm) {
+        sortedStats = sortedStats.filter(stat => stat.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    }
 
     // Helper for rendering trend indicators
     const TrendIndicator = ({ current, previous }) => {
@@ -134,12 +157,25 @@ export default function DashboardPage() {
                 </div>
             )}
 
-            {/* Time Filter */}
-            <div className="time-filter">
-                {TIME_FILTERS.map(f => (
-                    <button key={f.key} className={`time-btn${timeFilter === f.key ? ' active' : ''}`}
-                        onClick={() => changeTimeFilter(f.key)}>{f.label}</button>
-                ))}
+            {/* Time Filter & Search */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '1rem' }}>
+                <div className="time-filter" style={{ marginBottom: 0 }}>
+                    {TIME_FILTERS.map(f => (
+                        <button key={f.key} className={`time-btn${timeFilter === f.key ? ' active' : ''}`}
+                            onClick={() => changeTimeFilter(f.key)}>{f.label}</button>
+                    ))}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
+                    <Search size={16} color="var(--text-secondary)" style={{ position: 'absolute', left: '12px' }} />
+                    <input
+                        type="text"
+                        className="search-input"
+                        placeholder="ค้นหาชื่อเจ้าหน้าที่..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        style={{ width: '250px', padding: '8px 16px 8px 36px', borderRadius: '10px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'white', outline: 'none' }}
+                    />
+                </div>
             </div>
 
             {/* Stats Cards */}
@@ -249,6 +285,15 @@ export default function DashboardPage() {
                 </div>
 
             </div>
+
+            <ConfirmModal
+                isOpen={modal.isOpen}
+                title={modal.title}
+                message={modal.message}
+                type={modal.type}
+                onConfirm={modal.onConfirm}
+                onClose={closeModal}
+            />
         </div>
     );
 }

@@ -11,14 +11,20 @@ export default function AuthPage() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [loadingAuth, setLoadingAuth] = useState(false);
-    const { user, loading } = useAuth();
+    const { user, loading, isAdmin } = useAuth();
     const navigate = useNavigate();
     const particlesRef = useRef(null);
 
     // Redirect if already logged in
     useEffect(() => {
-        if (!loading && user) navigate('/admin');
-    }, [user, loading, navigate]);
+        if (!loading && user) {
+            if (isAdmin) {
+                navigate('/admin');
+            } else {
+                navigate('/');
+            }
+        }
+    }, [user, loading, isAdmin, navigate]);
 
     // Floating particles
     useEffect(() => {
@@ -109,7 +115,6 @@ export default function AuthPage() {
                 uid: cred.user.uid,
                 email: cred.user.email,
                 displayName: cred.user.displayName,
-                role: "user",
                 lastLogin: new Date().toISOString()
             }, { merge: true });
 
