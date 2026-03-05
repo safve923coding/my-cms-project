@@ -2,13 +2,14 @@ import { useAuth } from '../hooks/useAuth';
 import { useCases } from '../hooks/useCases';
 import { useDiscordScraper } from '../hooks/useDiscordScraper';
 import UserManager from '../components/UserManager';
+import OfficerManager from '../components/OfficerManager';
 import ConfirmModal from '../components/ConfirmModal';
 import { Database, RefreshCw, Trash2, ShieldAlert } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 
 export default function AdminPage() {
-    const { user, loading, isAdmin } = useAuth();
+    const { user, loading, isAdmin, isSuperAdmin } = useAuth();
     const navigate = useNavigate();
 
     const {
@@ -85,52 +86,62 @@ export default function AdminPage() {
 
     return (
         <div className="container" style={{ paddingTop: '2rem' }}>
-            <div className="header" style={{ marginBottom: '2rem' }}>
+            <div className="header" style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                 <div className="header-left">
-                    <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', margin: 0 }}>
                         <ShieldAlert size={32} color="#ff6b6b" />
                         ระบบจัดการสำหรับแอดมิน
                     </h1>
-                    <p>จัดการฐานข้อมูลคดีและบัญชีผู้ใช้งาน</p>
                 </div>
-            </div>
-
-            <div className="panel" style={{ marginBottom: '2rem' }}>
-                <div className="panel-header">
-                    <span className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Database size={20} /> จัดการฐานข้อมูล (Database)
-                    </span>
-                </div>
-                <div className="panel-body">
-                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                        <button
-                            className="btn btn-primary"
-                            onClick={handleUpdateData}
-                            disabled={fetching}
-                            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                        >
-                            <RefreshCw size={18} className={fetching ? 'spin' : ''} />
-                            {fetching ? 'กำลังอัพเดท...' : 'ดึงข้อมูลล่าสุดจาก Discord'}
-                        </button>
-
-                        <button
-                            className="btn btn-danger"
-                            onClick={handleClearAll}
-                            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                        >
-                            <Trash2 size={18} /> ล้างข้อมูลคดีทั้งหมด
-                        </button>
+                {isSuperAdmin && (
+                    <div className="header-right" style={{ textAlign: 'right' }}>
+                        <p style={{ margin: 0, fontWeight: 'bold', color: 'var(--accent-purple)' }}>จัดการฐานข้อมูลคดีและบัญชีผู้ใช้งาน</p>
                     </div>
-
-                    {(progress || fetchError) && (
-                        <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', borderLeft: fetchError ? '4px solid #ff6b6b' : '4px solid #69b3a2' }}>
-                            <span style={{ color: fetchError ? '#ff6b6b' : '#69b3a2' }}>{fetchError || progress}</span>
-                        </div>
-                    )}
-                </div>
+                )}
             </div>
 
-            <UserManager />
+            <OfficerManager />
+
+            {isSuperAdmin && (
+                <>
+                    <UserManager />
+
+                    <div className="panel" style={{ marginBottom: '2rem' }}>
+                        <div className="panel-header">
+                            <span className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <Database size={20} /> จัดการฐานข้อมูล (Database)
+                            </span>
+                        </div>
+                        <div className="panel-body">
+                            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={handleUpdateData}
+                                    disabled={fetching}
+                                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                                >
+                                    <RefreshCw size={18} className={fetching ? 'spin' : ''} />
+                                    {fetching ? 'กำลังอัพเดท...' : 'ดึงข้อมูลล่าสุดจาก Discord'}
+                                </button>
+
+                                <button
+                                    className="btn btn-danger"
+                                    onClick={handleClearAll}
+                                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                                >
+                                    <Trash2 size={18} /> ล้างข้อมูลคดีทั้งหมด
+                                </button>
+                            </div>
+
+                            {(progress || fetchError) && (
+                                <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', borderLeft: fetchError ? '4px solid #ff6b6b' : '4px solid #69b3a2' }}>
+                                    <span style={{ color: fetchError ? '#ff6b6b' : '#69b3a2' }}>{fetchError || progress}</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </>
+            )}
 
             <ConfirmModal
                 isOpen={modal.isOpen}

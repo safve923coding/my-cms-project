@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Home, Settings, LogOut, LogIn, Menu } from 'lucide-react';
+import { Home, Settings, LogOut, LogIn, Menu, Users } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import './Navbar.css';
 
@@ -30,6 +30,9 @@ export default function Navbar() {
                 <div className={`nav-links${open ? ' open' : ''}`}>
                     <NavLink to="/" end className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} onClick={() => setOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <Home size={18} /> หน้าหลัก
+                    </NavLink>
+                    <NavLink to="/officers" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} onClick={() => setOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Users size={18} /> รายชื่อเจ้าหน้าที่
                     </NavLink>
                     {user ? (
                         <>

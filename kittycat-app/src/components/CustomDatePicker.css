@@ -1,0 +1,146 @@
+.custom-datepicker-container {
+    position: relative;
+    user-select: none;
+    font-family: 'Prompt', sans-serif;
+}
+
+.custom-datepicker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(10, 10, 12, 0.6) 100%);
+    backdrop-filter: blur(10px);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05), 0 2px 5px rgba(0, 0, 0, 0.2);
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    gap: 8px;
+    width: 140px;
+    min-height: 40px;
+}
+
+.custom-datepicker-header:hover {
+    border-color: rgba(244, 114, 182, 0.4);
+    background: linear-gradient(135deg, rgba(236, 72, 153, 0.05) 0%, rgba(10, 10, 12, 0.8) 100%);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1), 0 4px 15px rgba(236, 72, 153, 0.15);
+}
+
+.custom-datepicker-header.open {
+    border-color: var(--accent-purple, #f472b6);
+    box-shadow: 0 0 0 2px rgba(244, 114, 182, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    background: linear-gradient(135deg, rgba(236, 72, 153, 0.1) 0%, rgba(10, 10, 12, 0.9) 100%);
+}
+
+.calendar-icon {
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.custom-datepicker-header:hover .calendar-icon {
+    opacity: 1;
+}
+
+.custom-datepicker-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    width: 280px;
+    background: rgba(15, 15, 20, 0.95);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    padding: 16px;
+    animation: dropdownPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    backdrop-filter: blur(10px);
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.current-month-year {
+    font-weight: 600;
+    color: white;
+    font-size: 1rem;
+}
+
+.nav-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    cursor: pointer;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    transition: all 0.2s;
+}
+
+.nav-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    text-align: center;
+}
+
+.calendar-weekday {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.calendar-day {
+    padding: 8px 0;
+    font-size: 0.9rem;
+    color: white;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.calendar-day.empty {
+    cursor: default;
+}
+
+.calendar-day:not(.empty):hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.calendar-day.selected {
+    background: var(--accent-purple, #f472b6);
+    color: white;
+    font-weight: bold;
+}
+
+.calendar-day.today {
+    color: var(--accent-purple, #f472b6);
+    font-weight: bold;
+    border: 1px solid rgba(244, 114, 182, 0.5);
+}
+
+@keyframes dropdownPop {
+    from {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}

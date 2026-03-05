@@ -6,6 +6,21 @@ import ConfirmModal from './ConfirmModal';
 import { Users, RefreshCw, Trash2, ShieldAlert } from 'lucide-react';
 import './UserManager.css';
 
+const POLICE_RANKS = [
+    { value: '', label: 'ไม่ระบุ' },
+    { value: 'ผบ.ตร.', label: 'ผบ.ตร.' },
+    { value: 'รอง ผบ.ตร.', label: 'รอง ผบ.ตร.' },
+    { value: 'จเรตำรวจ', label: 'จเรตำรวจ' },
+    { value: 'ผู้กำกับ', label: 'ผู้กำกับ' },
+    { value: 'สารวัตร', label: 'สารวัตร' },
+    { value: 'ผู้กอง', label: 'ผู้กอง' },
+    { value: 'ผู้บังคับหมวด', label: 'ผู้บังคับหมวด' },
+    { value: 'นายดาบตำรวจ', label: 'นายดาบตำรวจ' },
+    { value: 'จ่าสิบตำรวจ', label: 'จ่าสิบตำรวจ' },
+    { value: 'ผู้บังคับหมู่', label: 'ผู้บังคับหมู่' },
+    { value: 'นายร้อยตำรวจ', label: 'นายร้อยตำรวจ' }
+];
+
 export default function UserManager() {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -48,6 +63,16 @@ export default function UserManager() {
     useEffect(() => {
         fetchUsers();
     }, []);
+
+    const handleRankChange = async (userId, newRank) => {
+        try {
+            await updateDoc(doc(db, "users", userId), { rank: newRank });
+            // Optionally could show a small toast, but avoiding full re-fetch to preserve input focus
+        } catch (error) {
+            console.error("Error updating rank: ", error);
+            openModal('เกิดข้อผิดพลาด', 'เกิดข้อผิดพลาดในการอัปเดตยศ/ตำแหน่ง: ' + error.message, 'danger');
+        }
+    };
 
     const handleDeleteUser = async (userId, userEmail) => {
         if (userEmail && userEmail.toLowerCase() === 'chatpisit.safe.sh@gmail.com') {
@@ -132,8 +157,7 @@ export default function UserManager() {
                         <tr>
                             <th>ชื่อผู้ใช้</th>
                             <th>อีเมล</th>
-                            <th>วันที่สมัคร</th>
-                            <th>ยศ (Role)</th>
+                            <th>สิทธิ์ (Role)</th>
                             <th>จัดการ</th>
                         </tr>
                     </thead>
@@ -150,9 +174,6 @@ export default function UserManager() {
                                     <tr key={u.id}>
                                         <td className="fw-bold">{u.displayName || 'Unknown'} {isSuperAdmin && <ShieldAlert size={14} color="#f59e0b" style={{ marginLeft: '4px' }} />}</td>
                                         <td style={{ color: 'var(--text-secondary)' }}>{u.email}</td>
-                                        <td style={{ color: 'var(--text-secondary)' }}>
-                                            {u.createdAt ? new Date(u.createdAt).toLocaleDateString('th-TH') : '-'}
-                                        </td>
                                         <td>
                                             {isSuperAdmin ? (
                                                 <span style={{ color: '#f59e0b', fontWeight: 'bold' }}>ผู้ดูแล (Superadmin)</span>
